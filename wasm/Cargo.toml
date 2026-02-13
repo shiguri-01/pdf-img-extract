@@ -1,0 +1,13 @@
+[package]
+name = "extract-wasm"
+version = "0.1.0"
+edition.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+extract = { path = "../extract" }
+image = { workspace = true, features = ["png"] }
+js-sys = "0.3.82"
+wasm-bindgen = "0.2.105"

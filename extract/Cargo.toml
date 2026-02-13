@@ -1,0 +1,11 @@
+[package]
+name = "extract"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+hayro-interpret = { workspace = true }
+hayro-syntax = { workspace = true }
+image = { workspace = true, features =["png"]}
+kurbo = { workspace = true }
+thiserror = { workspace = true }
