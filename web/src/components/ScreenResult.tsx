@@ -1,9 +1,11 @@
-import { createMemo, Show } from "solid-js";
+import { createMemo, createSignal, Show } from "solid-js";
 import { SelectedPdf } from "./SelectedPdf";
 import { Button } from "./ui/button";
 import { ResultsGrid } from "./ResultsGrid";
 import { ErrorsList } from "./ErrorsList";
 import type { ExtractedErrorItem, ExtractedImageItem } from "@/extract";
+import { downloadImagesZip } from "@/extract/download-zip";
+import { IconLibraryPhoto } from "@tabler/icons-solidjs";
 
 interface ScreenResultProps {
   selectedFile: File | null;
@@ -72,6 +74,9 @@ function normalizeWarningItem(raw: unknown): { item: DisplayWarning; repaired: b
 }
 
 export function ScreenResult(props: ScreenResultProps) {
+  const [isZipDownloading, setIsZipDownloading] = createSignal(false);
+  const [zipError, setZipError] = createSignal<string | null>(null);
+
   const imageState = createMemo(() => {
     const items: ExtractedImageItem[] = [];
     let droppedCount = 0;
@@ -106,14 +111,45 @@ export function ScreenResult(props: ScreenResultProps) {
   const hasImages = createMemo(() => imageState().items.length > 0);
   const hasWarnings = createMemo(() => warningState().items.length > 0);
 
+  const onDownloadZip = async () => {
+    const file = props.selectedFile;
+    if (!file) {
+      setZipError("Selected PDF is missing.");
+      return;
+    }
+
+    setIsZipDownloading(true);
+    setZipError(null);
+    try {
+      await downloadImagesZip(file.name, imageState().items);
+    } catch (e) {
+      setZipError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setIsZipDownloading(false);
+    }
+  };
+
   return (
     <section class="grid gap-5 rounded-2xl bg-bg p-5">
       <header class="grid gap-4">
         <div class="flex flex-wrap items-start justify-between gap-3">
           <Show when={props.selectedFile}>{(file) => <SelectedPdf file={file()} />}</Show>
-          <Button intent="secondary" type="button" onClick={props.onReset}>
-            Start Over
-          </Button>
+          <div class="flex flex-wrap items-center gap-2">
+            <Show when={hasImages()}>
+              <Button
+                intent="primary"
+                type="button"
+                disabled={isZipDownloading()}
+                onClick={() => void onDownloadZip()}
+              >
+                <IconLibraryPhoto size={"1em"} />
+                {isZipDownloading() ? "Preparing ZIP..." : "Download All (ZIP)"}
+              </Button>
+            </Show>
+            <Button intent="secondary" type="button" onClick={props.onReset}>
+              Start Over
+            </Button>
+          </div>
         </div>
 
         <Show when={imageState().droppedCount > 0 || warningState().repairedCount > 0}>
@@ -121,6 +157,10 @@ export function ScreenResult(props: ScreenResultProps) {
             Skipped {imageState().droppedCount} invalid image item(s) and normalized{" "}
             {warningState().repairedCount} warning item(s).
           </p>
+        </Show>
+
+        <Show when={zipError()}>
+          {(message) => <p class="text-sm text-error-fg">{message()}</p>}
         </Show>
       </header>
 

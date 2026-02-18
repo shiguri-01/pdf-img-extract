@@ -3,6 +3,7 @@ import { Button } from "./ui/button";
 import type { ExtractedImageItem } from "@/extract";
 import { Image } from "@kobalte/core/image";
 import { IconDownload } from "@tabler/icons-solidjs";
+import { buildExtractedImageFileName } from "@/extract/file-names";
 
 interface ResultsGridProps {
   images: ExtractedImageItem[];
@@ -17,9 +18,7 @@ export function ResultsGrid(props: ResultsGridProps) {
 }
 
 function ImageCard(props: { item: ExtractedImageItem; index: number }) {
-  const fileName = createMemo(
-    () => `page-${props.item.pageIndex + 1}-image-${props.index + 1}.png`,
-  );
+  const fileName = createMemo(() => buildExtractedImageFileName(props.item.pageIndex, props.index));
   const pngBytes = createMemo(() => Uint8Array.from(props.item.pngBytes));
   const previewUrl = createMemo(() =>
     URL.createObjectURL(new Blob([pngBytes()], { type: "image/png" })),
