@@ -1,8 +1,8 @@
 import { err, ok, Result } from "neverthrow";
 
 export type PageRange = {
-  start: number | null;
-  end: number | null;
+  start: number;
+  end: number;
 };
 
 const RANGE_PATTERN = /^(\d+)(?:\s*-\s*(\d+))?$/;

@@ -2,6 +2,7 @@ build-wasm:
   wasm-pack build wasm --target web --release
 
 build-web:
+  pnpm --dir web install --frozen-lockfile
   pnpm --dir web build
 
 check:

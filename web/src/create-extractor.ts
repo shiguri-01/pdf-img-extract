@@ -12,7 +12,7 @@ export function createExtractor() {
 
   const [runtimeError, setRuntimeError] = createSignal<string | null>(null);
 
-  const run = async (file: File, pageRange: PageRange) => {
+  const run = async (file: File, pageRanges: PageRange[]) => {
     batch(() => {
       setStatus("running");
       setImages([]);
@@ -22,7 +22,7 @@ export function createExtractor() {
 
     try {
       const pdfBytes = new Uint8Array(await file.arrayBuffer());
-      const result = await extractImages(pdfBytes, pageRange);
+      const result = await extractImages(pdfBytes, pageRanges);
 
       if (result.isErr()) {
         setRuntimeError(result.error);

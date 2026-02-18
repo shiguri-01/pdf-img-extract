@@ -94,6 +94,26 @@ function normalizeUnknownErrorMessage(value: unknown): string {
   return value;
 }
 
+type WasmRange = {
+  start: number;
+  end: number;
+};
+
+const extractImagesWithRanges = extractImages as unknown as (
+  pdfBytes: Uint8Array,
+  ranges?: WasmRange[],
+) => unknown;
+
+function toWasmRanges(pageRanges: PageRange[]): WasmRange[] | undefined {
+  if (pageRanges.length === 0) {
+    return undefined;
+  }
+  return pageRanges.map((pageRange) => ({
+    start: pageRange.start,
+    end: pageRange.end,
+  }));
+}
+
 function parseExtractedResult(value: Record<string, unknown>): ExtractResult {
   const rawImages: unknown[] = Array.isArray(value.images) ? value.images : [];
   const parsedImageResults = rawImages.map(parseExtractedImageItem);
@@ -111,7 +131,7 @@ function parseExtractedResult(value: Record<string, unknown>): ExtractResult {
 const api: WorkerApi = {
   extractImages: async (
     pdfBytes: Uint8Array,
-    pageRange: PageRange = { start: null, end: null },
+    pageRanges: PageRange[] = [],
   ): Promise<WorkerExtractResult> => {
     const result = await ResultAsync.fromPromise(
       init({ module_or_path: wasmUrl }),
@@ -119,7 +139,7 @@ const api: WorkerApi = {
     )
       .andThen(() =>
         Result.fromThrowable(
-          () => extractImages(pdfBytes, pageRange.start, pageRange.end),
+          () => extractImagesWithRanges(pdfBytes, toWasmRanges(pageRanges)),
           normalizeUnknownErrorMessage,
         )()
           .andThen(parseWasmResponseObject)

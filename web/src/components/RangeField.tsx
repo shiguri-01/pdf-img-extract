@@ -16,8 +16,8 @@ export function RangeField(props: RangeFieldProps) {
       validationState={props.error ? "invalid" : "valid"}
     >
       <TextField.Label>Page Range</TextField.Label>
-      <TextField.Description>e.g. 1-5. Empty means all pages.</TextField.Description>
-      <TextField.Input placeholder="1-5" disabled={props.disabled} />
+      <TextField.Description>e.g. 1-3,5. Empty means all pages.</TextField.Description>
+      <TextField.Input placeholder="1-3,5" disabled={props.disabled} />
       <Show when={props.error}>
         {(message) => <TextField.ErrorMessage>{message()}</TextField.ErrorMessage>}
       </Show>

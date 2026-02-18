@@ -1,7 +1,4 @@
-use std::{
-    ops::{Bound, RangeBounds},
-    sync::Arc,
-};
+use std::sync::Arc;
 
 use hayro_interpret::{
     Context, Device, Image, InterpreterSettings, LumaData, RgbData, interpret_page,
@@ -45,9 +42,15 @@ pub struct ExtractImageWarning {
     pub kind: ExtractImageWarningKind,
 }
 
-pub fn extract_images<R: RangeBounds<usize>>(
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct PageRange {
+    pub start: usize,
+    pub end: usize,
+}
+
+pub fn extract_images(
     pdf_bytes: &[u8],
-    page_range: R,
+    page_ranges: &[PageRange],
 ) -> Result<ExtractImagesResult, ExtractError> {
     let pdf = Pdf::new(Arc::new(pdf_bytes.to_vec()))
         .map_err(|err| ExtractError::PdfParse(format!("{err:?}")))?;
@@ -55,16 +58,10 @@ pub fn extract_images<R: RangeBounds<usize>>(
 
     let pages = pdf.pages();
     let total = pages.len();
-
-    let Some((start, end)) = normalize_page_range(&page_range, total) else {
-        return Ok(ExtractImagesResult {
-            images: vec![],
-            errors: vec![],
-        });
-    };
+    let selected_pages = select_pages(total, page_ranges);
 
     for (i, page) in pages.iter().enumerate() {
-        if i < start || i > end {
+        if !selected_pages[i] {
             continue;
         }
         extractor.set_current_page_index(i);
@@ -86,30 +83,39 @@ pub fn extract_images<R: RangeBounds<usize>>(
     })
 }
 
-fn normalize_page_range<R: RangeBounds<usize>>(
-    page_range: &R,
-    total: usize,
-) -> Option<(usize, usize)> {
+fn select_pages(total: usize, page_ranges: &[PageRange]) -> Vec<bool> {
+    if total == 0 {
+        return vec![];
+    }
+    if page_ranges.is_empty() {
+        return vec![true; total];
+    }
+
+    let mut selected = vec![false; total];
+    for page_range in page_ranges {
+        let Some((start, end)) = normalize_page_range(page_range, total) else {
+            continue;
+        };
+        for is_selected in selected.iter_mut().take(end + 1).skip(start) {
+            *is_selected = true;
+        }
+    }
+    selected
+}
+
+fn normalize_page_range(page_range: &PageRange, total: usize) -> Option<(usize, usize)> {
     if total == 0 {
         return None;
     }
-
-    let start = match page_range.start_bound() {
-        Bound::Included(&s) => s,
-        Bound::Excluded(&s) => s + 1,
-        Bound::Unbounded => 0,
-    };
-
-    let end = match page_range.end_bound() {
-        Bound::Included(&e) => e,
-        Bound::Excluded(&e) => e.saturating_sub(1),
-        Bound::Unbounded => total - 1,
-    }
-    .min(total - 1);
-
-    if start > end {
+    if page_range.start > page_range.end {
         return None;
     }
+    if page_range.start >= total {
+        return None;
+    }
+
+    let start = page_range.start;
+    let end = page_range.end.min(total - 1);
 
     Some((start, end))
 }
@@ -277,32 +283,81 @@ impl Device<'_> for ImageExtractor {
 #[cfg(test)]
 mod tests {
     use super::{
-        ExtractImageWarningKind, normalize_page_range, validate_alpha_shape, validate_rgb_shape,
+        ExtractImageWarningKind, PageRange, normalize_page_range, select_pages,
+        validate_alpha_shape, validate_rgb_shape,
     };
 
     #[test]
-    fn normalize_unbounded_range_uses_all_pages() {
-        assert_eq!(normalize_page_range(&(..), 5), Some((0, 4)));
+    fn normalize_keeps_valid_range() {
+        assert_eq!(
+            normalize_page_range(&PageRange { start: 1, end: 3 }, 10),
+            Some((1, 3))
+        );
     }
 
     #[test]
-    fn normalize_excluded_end_is_decremented() {
-        assert_eq!(normalize_page_range(&(1..3), 10), Some((1, 2)));
-    }
-
-    #[test]
-    fn normalize_included_end_is_kept() {
-        assert_eq!(normalize_page_range(&(1..=3), 10), Some((1, 3)));
+    fn normalize_clamps_end() {
+        assert_eq!(
+            normalize_page_range(&PageRange { start: 2, end: 20 }, 10),
+            Some((2, 9))
+        );
     }
 
     #[test]
     fn normalize_invalid_range_returns_none() {
-        assert_eq!(normalize_page_range(&(3..3), 10), None);
+        assert_eq!(
+            normalize_page_range(&PageRange { start: 3, end: 2 }, 10),
+            None
+        );
+    }
+
+    #[test]
+    fn normalize_out_of_bounds_start_returns_none() {
+        assert_eq!(
+            normalize_page_range(&PageRange { start: 10, end: 12 }, 10),
+            None
+        );
     }
 
     #[test]
     fn normalize_empty_document_returns_none() {
-        assert_eq!(normalize_page_range(&(..), 0), None);
+        assert_eq!(
+            normalize_page_range(&PageRange { start: 0, end: 0 }, 0),
+            None
+        );
+    }
+
+    #[test]
+    fn select_pages_empty_range_uses_all_pages() {
+        assert_eq!(select_pages(5, &[]), vec![true, true, true, true, true]);
+    }
+
+    #[test]
+    fn select_pages_ignores_invalid_ranges() {
+        assert_eq!(
+            select_pages(
+                5,
+                &[
+                    PageRange { start: 10, end: 12 },
+                    PageRange { start: 3, end: 1 }
+                ]
+            ),
+            vec![false, false, false, false, false]
+        );
+    }
+
+    #[test]
+    fn select_pages_deduplicates_overlapping_ranges() {
+        assert_eq!(
+            select_pages(
+                6,
+                &[
+                    PageRange { start: 1, end: 3 },
+                    PageRange { start: 2, end: 5 }
+                ]
+            ),
+            vec![false, true, true, true, true, true]
+        );
     }
 
     #[test]

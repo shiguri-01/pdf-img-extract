@@ -5,27 +5,11 @@ use image::{DynamicImage, ImageFormat};
 use js_sys::{Array, Error as JsError, Object, Reflect, Uint8Array};
 use wasm_bindgen::prelude::*;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum PageRangeArg {
-    All,
-    From(usize),
-    ToInclusive(usize),
-    Inclusive(usize, usize),
-}
-
 #[wasm_bindgen(js_name = extractImages)]
-pub fn extract_images(
-    pdf_bytes: &[u8],
-    start: Option<u32>,
-    end: Option<u32>,
-) -> Result<JsValue, JsValue> {
-    let result = match page_range_from_options(start, end) {
-        PageRangeArg::All => extract::extract_images(pdf_bytes, ..),
-        PageRangeArg::From(s) => extract::extract_images(pdf_bytes, s..),
-        PageRangeArg::ToInclusive(e) => extract::extract_images(pdf_bytes, ..=e),
-        PageRangeArg::Inclusive(s, e) => extract::extract_images(pdf_bytes, s..=e),
-    }
-    .map_err(|err| js_error(&err.to_string()))?;
+pub fn extract_images(pdf_bytes: &[u8], ranges: Option<Array>) -> Result<JsValue, JsValue> {
+    let page_ranges = parse_page_ranges(ranges)?;
+    let result = extract::extract_images(pdf_bytes, &page_ranges)
+        .map_err(|err| js_error(&err.to_string()))?;
 
     let images = Array::new();
     for item in result.images {
@@ -78,13 +62,47 @@ pub fn extract_images(
     Ok(result_obj.into())
 }
 
-fn page_range_from_options(start: Option<u32>, end: Option<u32>) -> PageRangeArg {
-    match (start, end) {
-        (Some(s), Some(e)) => PageRangeArg::Inclusive(s as usize, e as usize),
-        (Some(s), None) => PageRangeArg::From(s as usize),
-        (None, Some(e)) => PageRangeArg::ToInclusive(e as usize),
-        (None, None) => PageRangeArg::All,
+fn parse_page_ranges(ranges: Option<Array>) -> Result<Vec<extract::PageRange>, JsValue> {
+    let Some(ranges) = ranges else {
+        return Ok(vec![]);
+    };
+
+    let mut parsed = Vec::with_capacity(ranges.length() as usize);
+    for (index, item) in ranges.iter().enumerate() {
+        if !item.is_object() {
+            return Err(js_error(&format!(
+                "range at index {index} must be an object"
+            )));
+        }
+        let start = Reflect::get(&item, &JsValue::from_str("start"))
+            .map_err(|_| js_error(&format!("range at index {index} is missing start")))?;
+        let end = Reflect::get(&item, &JsValue::from_str("end"))
+            .map_err(|_| js_error(&format!("range at index {index} is missing end")))?;
+
+        let start = parse_non_negative_index(&start, "start", index)?;
+        let end = parse_non_negative_index(&end, "end", index)?;
+
+        parsed.push(extract::PageRange { start, end });
     }
+    Ok(parsed)
+}
+
+fn parse_non_negative_index(
+    value: &JsValue,
+    field: &str,
+    range_index: usize,
+) -> Result<usize, JsValue> {
+    let Some(num) = value.as_f64() else {
+        return Err(js_error(&format!(
+            "{field} at index {range_index} must be a number"
+        )));
+    };
+    if num.is_sign_negative() || num.fract() != 0.0 {
+        return Err(js_error(&format!(
+            "{field} at index {range_index} must be a non-negative integer"
+        )));
+    }
+    Ok(num as usize)
 }
 
 fn encode_png(image: &DynamicImage) -> Result<Vec<u8>, String> {
@@ -109,21 +127,8 @@ fn js_error(message: &str) -> JsValue {
 
 #[cfg(test)]
 mod tests {
-    use super::{PageRangeArg, page_range_from_options, warning_kind_code};
+    use super::warning_kind_code;
     use extract::ExtractImageWarningKind;
-
-    #[test]
-    fn range_options_are_mapped_to_all() {
-        assert_eq!(page_range_from_options(None, None), PageRangeArg::All);
-    }
-
-    #[test]
-    fn range_options_are_mapped_to_inclusive() {
-        assert_eq!(
-            page_range_from_options(Some(2), Some(5)),
-            PageRangeArg::Inclusive(2, 5)
-        );
-    }
 
     #[test]
     fn warning_kind_code_is_stable() {

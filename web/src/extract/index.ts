@@ -6,7 +6,7 @@ import { fromWorkerResult, type WorkerApi } from "./worker-interface";
 
 export function extractImages(
   pdfBytes: Uint8Array,
-  pageRange: PageRange = { start: null, end: null },
+  pageRanges: PageRange[] = [],
 ): ResultAsync<ExtractResult, string> {
   return ResultAsync.fromPromise(
     (async () => {
@@ -18,7 +18,7 @@ export function extractImages(
       try {
         const workerResult = await api.extractImages(
           Comlink.transfer(pdfBytes, [pdfBytes.buffer]),
-          pageRange,
+          pageRanges,
         );
         const result = fromWorkerResult(workerResult);
         if (result.isErr()) {

@@ -1,4 +1,4 @@
-import { err, ok, type Result } from "neverthrow";
+import { ok, type Result } from "neverthrow";
 import { parsePageRanges, type PageRange } from "./extract/page-range";
 import { batch, createSignal } from "solid-js";
 
@@ -45,17 +45,12 @@ export function createPdfField() {
   };
 }
 
-function parseRangeText(text: string): Result<PageRange, string> {
+function parseRangeText(text: string): Result<PageRange[], string> {
   const currentRangeText = text.trim();
   if (currentRangeText === "") {
-    return ok({ start: null, end: null });
+    return ok([]);
   }
-  return parsePageRanges(currentRangeText).andThen((ranges) => {
-    if (ranges.length !== 1) {
-      return err("Only a single page range is supported.");
-    }
-    return ok(ranges[0] ?? { start: null, end: null });
-  });
+  return parsePageRanges(currentRangeText);
 }
 
 function isSupportedPdfFile(file: File): boolean {

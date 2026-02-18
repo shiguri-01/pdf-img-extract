@@ -3,7 +3,7 @@ import { ok, err, type Result } from "neverthrow";
 import type { PageRange } from "./page-range";
 
 export type WorkerApi = {
-  extractImages: (pdfBytes: Uint8Array, pageRange?: PageRange) => Promise<WorkerExtractResult>;
+  extractImages: (pdfBytes: Uint8Array, pageRanges?: PageRange[]) => Promise<WorkerExtractResult>;
 };
 
 // Workerで転送するときにResultのメソッドが剥がれてしまうので
