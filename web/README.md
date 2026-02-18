@@ -1,28 +1,47 @@
-## Usage
+# web
+
+A SolidJS app that extracts PDF images in the browser using `extract-wasm`.
+
+## Requirements
+
+- Node.js
+- `pnpm`
+- `wasm/pkg` must be generated in advance (`just build-wasm`)
+
+## Setup
 
 ```bash
-$ npm install # or pnpm install or yarn install
+pnpm --dir web install --frozen-lockfile
 ```
 
-### Learn more on the [Solid Website](https://solidjs.com) and come chat with us on our [Discord](https://discord.com/invite/solidjs)
+## Development
 
-## Available Scripts
+```bash
+pnpm --dir web dev
+```
 
-In the project directory, you can run:
+## Build
 
-### `npm run dev`
+```bash
+pnpm --dir web build
+```
 
-Runs the app in the development mode.<br>
-Open [http://localhost:5173](http://localhost:5173) to view it in the browser.
+To run from the repository root:
 
-### `npm run build`
+```bash
+just build-web
+```
 
-Builds the app for production to the `dist` folder.<br>
-It correctly bundles Solid in production mode and optimizes the build for the best performance.
+## Quality Checks
 
-The build is minified and the filenames include the hashes.<br>
-Your app is ready to be deployed!
+- `pnpm --dir web lint`
+- `pnpm --dir web exec tsc -b`
+- `pnpm --dir web fmt`
 
-## Deployment
+Use `just check` from the root for full repository validation.
 
-Learn more about deploying your application with the [documentations](https://vite.dev/guide/static-deploy.html)
+## Implementation Notes
+
+- Extraction runs in a Web Worker at `src/extract/worker.ts`
+- The worker initializes `extract-wasm` and performs extraction
+- Images are handled as PNG byte arrays and can be downloaded as a ZIP from the UI
