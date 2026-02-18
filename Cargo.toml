@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["extract", "wasm"]
+members = ["extract", "wasm", "cli"]
 
 [workspace.package]
 edition = "2024"

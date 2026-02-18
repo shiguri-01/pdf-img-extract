@@ -1,0 +1,12 @@
+[package]
+name = "pdf-img-extract-cli"
+version = "0.1.0"
+edition.workspace = true
+
+[[bin]]
+name = "pdf-img-extract"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4.5.32", features = ["derive"] }
+extract = { path = "../extract" }

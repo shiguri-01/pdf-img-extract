@@ -5,6 +5,9 @@ build-web:
   pnpm --dir web install --frozen-lockfile
   pnpm --dir web build
 
+build-cli:
+  cargo build -p pdf-img-extract-cli
+
 check:
   cargo clippy --workspace --all-targets -- -D warnings
   cargo test --workspace
