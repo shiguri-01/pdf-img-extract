@@ -1,6 +1,12 @@
 import { createMemo, createSignal, Show } from "solid-js";
 import { SelectedPdf } from "./SelectedPdf";
 import { Button } from "./ui/button";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogTitle,
+} from "./ui/alert-dialog";
 import { ResultsGrid } from "./ResultsGrid";
 import { ErrorsList } from "./ErrorsList";
 import type { ExtractedErrorItem, ExtractedImageItem } from "@/extract";
@@ -76,6 +82,7 @@ function normalizeWarningItem(raw: unknown): { item: DisplayWarning; repaired: b
 export function ScreenResult(props: ScreenResultProps) {
   const [isZipDownloading, setIsZipDownloading] = createSignal(false);
   const [zipError, setZipError] = createSignal<string | null>(null);
+  const [isResetConfirmOpen, setIsResetConfirmOpen] = createSignal(false);
 
   const imageState = createMemo(() => {
     const items: ExtractedImageItem[] = [];
@@ -129,6 +136,15 @@ export function ScreenResult(props: ScreenResultProps) {
     }
   };
 
+  const onOpenInNewTab = () => {
+    window.open(window.location.href, "_blank", "noopener,noreferrer");
+  };
+
+  const onConfirmReset = () => {
+    setIsResetConfirmOpen(false);
+    props.onReset();
+  };
+
   return (
     <section class="grid gap-5 rounded-2xl bg-bg p-5">
       <header class="grid gap-4">
@@ -146,7 +162,7 @@ export function ScreenResult(props: ScreenResultProps) {
                 {isZipDownloading() ? "Preparing ZIP..." : "Download All (ZIP)"}
               </Button>
             </Show>
-            <Button intent="secondary" type="button" onClick={props.onReset}>
+            <Button intent="secondary" type="button" onClick={() => setIsResetConfirmOpen(true)}>
               Start Over
             </Button>
           </div>
@@ -183,6 +199,42 @@ export function ScreenResult(props: ScreenResultProps) {
           <ResultsGrid images={imageState().items} />
         </Show>
       </section>
+
+      <AlertDialog open={isResetConfirmOpen()} onOpenChange={setIsResetConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogTitle>Discard extracted images?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This will remove all extracted images from the current result. This action cannot be
+            undone.
+          </AlertDialogDescription>
+          <div class="grid gap-2 md:grid-cols-3">
+            <AlertDialog.CloseButton
+              as={Button}
+              intent="secondary"
+              type="button"
+              class="w-full justify-center"
+            >
+              Cancel
+            </AlertDialog.CloseButton>
+            <Button
+              intent="secondary"
+              type="button"
+              class="w-full justify-center whitespace-nowrap"
+              onClick={onOpenInNewTab}
+            >
+              Start in New Tab
+            </Button>
+            <Button
+              intent="primary"
+              type="button"
+              class="w-full justify-center"
+              onClick={onConfirmReset}
+            >
+              Start Over
+            </Button>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
     </section>
   );
 }
