@@ -8,8 +8,8 @@
   --color-muted-bg: var(--color-neutral-100);
   --color-error-fg: var(--color-red-700);
 
-  --color-accent-fg: oklch(99.4% 0.0029 7.914);
-  --color-accent-bg: oklch(72.8% 0.1761 7.914);
+  --color-accent-fg: oklch(99.4% 0.0038 32.43);
+  --color-accent-bg: oklch(72% 0.1441 32.43);
 }
 
 :root {

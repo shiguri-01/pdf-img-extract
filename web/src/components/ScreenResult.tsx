@@ -146,56 +146,47 @@ export function ScreenResult(props: ScreenResultProps) {
   };
 
   return (
-    <section class="grid gap-5 rounded-2xl bg-bg p-5">
-      <header class="grid gap-4">
-        <div class="flex flex-wrap items-start justify-between gap-3">
-          <Show when={props.selectedFile}>{(file) => <SelectedPdf file={file()} />}</Show>
-          <div class="flex flex-wrap items-center gap-2">
-            <Show when={hasImages()}>
-              <Button
-                intent="primary"
-                type="button"
-                disabled={isZipDownloading()}
-                onClick={() => void onDownloadZip()}
-              >
-                <IconLibraryPhoto size={"1em"} />
-                {isZipDownloading() ? "Preparing ZIP..." : "Download All (ZIP)"}
-              </Button>
-            </Show>
-            <Button intent="secondary" type="button" onClick={() => setIsResetConfirmOpen(true)}>
-              Start Over
+    <section class="space-y-5 md:px-4">
+      <header class="flex flex-wrap items-start justify-between gap-3 sticky top-0 bg-bg py-1">
+        <Show when={props.selectedFile}>{(file) => <SelectedPdf file={file()} />}</Show>
+        <div class="flex flex-wrap items-center gap-2">
+          <Show when={hasImages()}>
+            <Button
+              intent="primary"
+              type="button"
+              disabled={isZipDownloading()}
+              onClick={() => void onDownloadZip()}
+            >
+              <IconLibraryPhoto size={"1em"} />
+              {isZipDownloading() ? "Preparing ZIP..." : "Download All (ZIP)"}
             </Button>
-          </div>
+          </Show>
+          <Button intent="secondary" type="button" onClick={() => setIsResetConfirmOpen(true)}>
+            Start Over
+          </Button>
         </div>
 
-        <Show when={imageState().droppedCount > 0 || warningState().repairedCount > 0}>
-          <p class="text-sm text-muted-fg">
-            Skipped {imageState().droppedCount} invalid image item(s) and normalized{" "}
-            {warningState().repairedCount} warning item(s).
-          </p>
-        </Show>
-
         <Show when={zipError()}>
-          {(message) => <p class="text-sm text-error-fg">{message()}</p>}
+          {(message) => <p class="text-sm text-error-fg mt-2">{message()}</p>}
         </Show>
       </header>
 
+      <Show when={imageState().droppedCount > 0 || warningState().repairedCount > 0}>
+        <p class="text-sm text-muted-fg">
+          Skipped {imageState().droppedCount} invalid image item(s) and normalized{" "}
+          {warningState().repairedCount} warning item(s).
+        </p>
+      </Show>
+
       <Show when={hasWarnings()}>
-        <section class="grid gap-2">
-          <h3 class="font-medium">Warnings</h3>
+        <section>
+          <h3 class="font-medium mb-2">Warnings</h3>
           <ErrorsList errors={warningState().items} />
         </section>
       </Show>
 
-      <section class="grid gap-3">
-        <Show
-          when={hasImages()}
-          fallback={
-            <div class="grid gap-1 py-1">
-              <p>No raster images found.</p>
-            </div>
-          }
-        >
+      <section>
+        <Show when={hasImages()} fallback={<p class="grid gap-1 py-1">No raster images found.</p>}>
           <ResultsGrid images={imageState().items} />
         </Show>
       </section>
