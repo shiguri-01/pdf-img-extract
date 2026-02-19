@@ -5,5 +5,5 @@ export function buildExtractedImageFileName(pageIndex: number, imageIndex: numbe
 export function buildZipFileName(pdfFileName: string): string {
   const baseName = pdfFileName.trim().replace(/\.pdf$/i, "");
   const normalizedBaseName = baseName.length > 0 ? baseName : "images";
-  return `${normalizedBaseName}-extracted-images.zip`;
+  return `${normalizedBaseName}-images.zip`;
 }
