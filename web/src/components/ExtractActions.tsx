@@ -8,7 +8,7 @@ export function ExtractActions(props: ExtractActionsProps) {
   return (
     <Button
       type="submit"
-      class="h-10 min-w-28 px-5 text-sm"
+      class="h-10 min-w-28 px-5"
       disabled={!props.canSubmit || props.isRunning}
       aria-busy={props.isRunning}
     >

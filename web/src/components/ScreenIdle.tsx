@@ -24,7 +24,7 @@ export function ScreenIdle(props: ScreenIdleProps) {
   const isRunning = () => props.status === "running";
 
   return (
-    <section class="grid gap-4 rounded-2xl bg-bg p-5">
+    <section class="grid gap-4 rounded-2xl bg-bg">
       <form
         class="grid min-h-[34rem] grid-rows-[1fr_auto] gap-4 md:min-h-[38rem]"
         onSubmit={props.onSubmit}

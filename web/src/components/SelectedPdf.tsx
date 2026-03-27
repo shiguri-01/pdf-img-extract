@@ -24,8 +24,8 @@ export function SelectedPdf(props: SelectedPdfProps) {
   const name = createMemo(() => props.file.name);
   const size = createMemo(() => formatFileSize(props.file.size));
   return (
-    <div class="grid gap-1">
-      <p class="truncate text-xl font-medium" title={name()}>
+    <div class="grid gap-0">
+      <p class="truncate text-xl font-medium leading-snug" title={name()}>
         {name()}
       </p>
       <p class="px-0.5 text-sm text-muted-fg">{size()}</p>

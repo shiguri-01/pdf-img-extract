@@ -11,12 +11,7 @@ export function RunElapsed(props: RunElapsedProps) {
 
   return (
     <div class="min-h-6 sm:justify-self-end">
-      <Show
-        when={isRunning()}
-        fallback={
-          <p class="pt-0.5 text-sm sm:text-right">Processing runs locally in your browser.</p>
-        }
-      >
+      <Show when={isRunning()}>
         <p
           class="pt-0.5 text-sm tabular-nums text-muted-fg sm:text-right"
           role="status"

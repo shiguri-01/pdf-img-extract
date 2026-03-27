@@ -26,7 +26,7 @@ export function PdfDropzoneField(props: PdfDropzoneFieldProps) {
       <div class="grid h-full grid-rows-[1fr_auto] gap-2">
         <FileField.Dropzone
           class={cn(
-            "grid h-full min-h-[22rem] place-items-center rounded-xl border-2 border-dashed border-border px-4 py-6 md:min-h-[26rem] md:px-6",
+            "grid h-full min-h-88 place-items-center rounded-xl border-2 border-dashed border-border px-4 py-6 md:min-h-104 md:px-4",
             "transition-colors",
             "hover:bg-muted-bg/30",
             props.disabled && "opacity-60",
@@ -34,16 +34,16 @@ export function PdfDropzoneField(props: PdfDropzoneFieldProps) {
         >
           <div class="mx-auto grid w-full max-w-md justify-items-center gap-4 text-center">
             <IconFile class="size-14 text-border md:size-16" aria-hidden="true" />
-            <div class="grid gap-1">
+            <div class="space-y-2">
               <p class="text-lg font-medium leading-tight">Drop PDF here</p>
-              <p class="text-sm text-muted-fg">You can also select a file with Browse.</p>
+              <FileField.Trigger
+                class={buttonStyle({ intent: "secondary" })}
+                disabled={props.disabled}
+              >
+                Browse
+              </FileField.Trigger>
             </div>
-            <FileField.Trigger
-              class={cn(buttonStyle({ intent: "secondary" }), "h-10 min-w-28 px-5 text-sm")}
-              disabled={props.disabled}
-            >
-              Browse
-            </FileField.Trigger>
+            <p class="text-sm">Processing runs locally in your browser.</p>
           </div>
         </FileField.Dropzone>
 

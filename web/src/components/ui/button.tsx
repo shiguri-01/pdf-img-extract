@@ -12,6 +12,7 @@ export const buttonStyle = cva(
     "outline-(--btn-outline) outline-offset-1 focus-visible:outline-2",
     "transition-all",
     "disabled:opacity-50 disabled:hover:bg-(--btn-bg)",
+    "select-none",
   ],
   {
     variants: {

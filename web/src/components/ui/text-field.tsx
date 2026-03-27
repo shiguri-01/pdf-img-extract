@@ -4,10 +4,10 @@ import { cn } from "../../styling";
 
 export const textFieldRootStyle = "grid gap-1";
 export const textFieldLabelStyle = "font-medium";
-export const textFieldDescriptionStyle = "text-muted-fg text-sm";
+export const textFieldDescriptionStyle = "text-sm";
 export const textFieldInputStyle =
   "w-full rounded-md border border-border bg-bg px-3 py-2 outline-none focus-visible:ring-2 focus-visible:ring-fg disabled:opacity-50";
-export const textFieldErrorStyle = "mt-1 text-error-fg";
+export const textFieldErrorStyle = "text-error-fg";
 
 function Root(props: ComponentProps<typeof KobalteTextField>) {
   const [local, rest] = splitProps(props, ["class"]);
